@@ -44,14 +44,53 @@ namespace ServiceStack.OrmLite.SqlServerTests
         }
 
         [Test]
-        public void Complex_Types_Should_Use_Max_For_Undefined_String_Length()
+        public void Can_store_complex_type_as_unicode()
+        {
+            using(var con = ConnectionString.OpenDbConnection())
+            {
+                const string unicodeString = "日本語 äÄöÖüÜß ıIiİüÜğĞşŞöÖçÇ åÅäÄöÖ";
+                OrmLiteConfig.DialectProvider.UseUnicode = true;
+                ComplexType complexType = new ComplexType
+                    {
+                        StringList = new List<string>() { unicodeString },
+                        Dictionary = new Dictionary<Guid, string> { { Guid.Empty, unicodeString } },
+                        Id = 1,
+                        SubTypes = new List<ComplexType.ComplexSubType>()
+                            {
+                                new ComplexType.ComplexSubType()
+                                    {
+                                        Field1 = 1,
+                                        Field2 = unicodeString,
+                                        Field3 = Guid.Empty,
+                                        Field4 = new DateTime(2000, 01, 01, 0, 0, 0)
+                                    }
+                            }
+                    };
+
+                con.CreateTable<ComplexType>(true);
+                con.Save(complexType);
+
+                var result = con.GetById<ComplexType>(1);
+                con.DropTable<ComplexType>();
+
+                Assert.That(result.StringList[0] == complexType.StringList[0]);
+                Assert.That(result.Dictionary[Guid.Empty] == complexType.Dictionary[Guid.Empty]);
+                Assert.That(result.SubTypes[0].Field1 == complexType.SubTypes[0].Field1);
+                Assert.That(result.SubTypes[0].Field2 == complexType.SubTypes[0].Field2);
+                Assert.That(result.SubTypes[0].Field3 == complexType.SubTypes[0].Field3);
+                Assert.That(result.SubTypes[0].Field4 == complexType.SubTypes[0].Field4);
+            }
+        }
+
+        [Test]
+        public void Complex_types_should_use_max_for_undefined_string_length()
         {
             OrmLiteConfig.DialectProvider.UseUnicode = true;
             var createTableSql = OrmLiteConfig.DialectProvider.ToCreateTableStatement(typeof(ComplexType));
             Console.WriteLine("createTableSql: " + createTableSql);
-            Assert.That(createTableSql.Contains(@"""StringList"" NVARCHAR(250)"), Is.True);
-            Assert.That(createTableSql.Contains(@"""Dictionary"" NVARCHAR(4000)"), Is.True);
-            Assert.That(createTableSql.Contains(@"""SubTypes"" NVARCHAR(MAX)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("NVARCHAR(250)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("NVARCHAR(4000)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("NVARCHAR(MAX)"), Is.True);
         }
 
         [Test]
@@ -218,9 +257,9 @@ namespace ServiceStack.OrmLite.SqlServerTests
         {
             var createTableSql = OrmLiteConfig.DialectProvider.ToCreateTableStatement(typeof(ComplexType));
             Console.WriteLine("createTableSql: " + createTableSql);
-            Assert.That(createTableSql.Contains(@"""StringList"" VARCHAR(250)"), Is.True);
-            Assert.That(createTableSql.Contains(@"""Dictionary"" VARCHAR(8000)"), Is.True);
-            Assert.That(createTableSql.Contains(@"""SubTypes"" VARCHAR(MAX)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("VARCHAR(250)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("VARCHAR(8000)"), Is.True);
+            Assert.That(createTableSql.ToUpperInvariant().Contains("VARCHAR(MAX)"), Is.True);
         }
     }
 }

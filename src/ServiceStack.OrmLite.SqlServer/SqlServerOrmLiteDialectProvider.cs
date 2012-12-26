@@ -128,7 +128,10 @@ namespace ServiceStack.OrmLite.SqlServer
             {
                 if(TypeSerializer.CanCreateFromString(fieldType))
                 {
-                    return "'" + EscapeParam(TypeSerializer.SerializeToString(value)) + "'";
+                    return UseUnicode
+                               ? "N'" + EscapeParam(TypeSerializer.SerializeToString(value)) + "'"
+                               : "'" + EscapeParam(TypeSerializer.SerializeToString(value)) + "'"
+                        ;
                 }
 
                 throw new NotSupportedException(
