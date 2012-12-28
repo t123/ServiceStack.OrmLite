@@ -31,7 +31,7 @@ namespace ServiceStack.OrmLite
         [Conditional("DEBUG")]
         private static void LogDebug(string fmt, params object[] args)
         {
-            if (args.Length > 0)
+            if(args.Length > 0)
                 Log.DebugFormat(fmt, args);
             else
                 Log.Debug(fmt);
@@ -238,7 +238,7 @@ namespace ServiceStack.OrmLite
         public virtual bool ShouldQuoteValue(Type fieldType)
         {
             string fieldDefinition;
-            if (!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
+            if(!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
             {
                 fieldDefinition = this.GetUndefinedColumnDefinition(fieldType, null);
             }
@@ -252,26 +252,26 @@ namespace ServiceStack.OrmLite
 
         public virtual object ConvertDbValue(object value, Type type)
         {
-            if (value == null || value.GetType() == typeof(DBNull)) return null;
+            if(value == null || value.GetType() == typeof(DBNull)) return null;
 
-            if (value.GetType() == type)
+            if(value.GetType() == type)
             {
                 return value;
             }
 
-            if (type.IsValueType)
+            if(type.IsValueType)
             {
-                if (type == typeof(float))
+                if(type == typeof(float))
                     return value is double ? (float)((double)value) : (float)value;
 
-                if (type == typeof(double))
+                if(type == typeof(double))
                     return value is float ? (double)((float)value) : (double)value;
 
-                if (type == typeof(decimal))
+                if(type == typeof(decimal))
                     return (decimal)value;
             }
 
-            if (type == typeof(string))
+            if(type == typeof(string))
                 return value;
 
             try
@@ -279,7 +279,7 @@ namespace ServiceStack.OrmLite
                 var convertedValue = TypeSerializer.DeserializeFromString(value.ToString(), type);
                 return convertedValue;
             }
-            catch (Exception)
+            catch(Exception)
             {
                 log.ErrorFormat("Error ConvertDbValue trying to convert {0} into {1}",
                     value, type.Name);
@@ -289,11 +289,11 @@ namespace ServiceStack.OrmLite
 
         public virtual string GetQuotedValue(object value, Type fieldType)
         {
-            if (value == null) return "NULL";
+            if(value == null) return "NULL";
 
-            if (!fieldType.UnderlyingSystemType.IsValueType && fieldType != typeof(string))
+            if(!fieldType.UnderlyingSystemType.IsValueType && fieldType != typeof(string))
             {
-                if (TypeSerializer.CanCreateFromString(fieldType))
+                if(TypeSerializer.CanCreateFromString(fieldType))
                 {
                     return "'" + EscapeParam(TypeSerializer.SerializeToString(value)) + "'";
                 }
@@ -302,13 +302,13 @@ namespace ServiceStack.OrmLite
                     string.Format("Property of type: {0} is not supported", fieldType.FullName));
             }
 
-            if (fieldType == typeof(float))
+            if(fieldType == typeof(float))
                 return ((float)value).ToString(CultureInfo.InvariantCulture);
 
-            if (fieldType == typeof(double))
+            if(fieldType == typeof(double))
                 return ((double)value).ToString(CultureInfo.InvariantCulture);
 
-            if (fieldType == typeof(decimal))
+            if(fieldType == typeof(decimal))
                 return ((decimal)value).ToString(CultureInfo.InvariantCulture);
 
             return ShouldQuoteValue(fieldType)
@@ -345,7 +345,7 @@ namespace ServiceStack.OrmLite
 
         protected virtual string GetUndefinedColumnDefinition(Type fieldType, int? fieldLength)
         {
-            if (TypeSerializer.CanCreateFromString(fieldType))
+            if(TypeSerializer.CanCreateFromString(fieldType))
             {
                 return string.Format(StringLengthColumnDefinitionFormat, fieldLength.GetValueOrDefault(DefaultStringLength));
             }
@@ -360,13 +360,13 @@ namespace ServiceStack.OrmLite
         {
             string fieldDefinition;
 
-            if (fieldType == typeof(string))
+            if(fieldType == typeof(string))
             {
                 fieldDefinition = string.Format(StringLengthColumnDefinitionFormat, fieldLength.GetValueOrDefault(DefaultStringLength));
             }
             else
             {
-                if (!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
+                if(!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
                 {
                     fieldDefinition = this.GetUndefinedColumnDefinition(fieldType, fieldLength);
                 }
@@ -375,17 +375,17 @@ namespace ServiceStack.OrmLite
             var sql = new StringBuilder();
             sql.AppendFormat("{0} {1}", GetQuotedColumnName(fieldName), fieldDefinition);
 
-            if (isPrimaryKey)
+            if(isPrimaryKey)
             {
                 sql.Append(" PRIMARY KEY");
-                if (autoIncrement)
+                if(autoIncrement)
                 {
                     sql.Append(" ").Append(AutoIncrementDefinition);
                 }
             }
             else
             {
-                if (isNullable)
+                if(isNullable)
                 {
                     sql.Append(" NULL");
                 }
@@ -395,7 +395,7 @@ namespace ServiceStack.OrmLite
                 }
             }
 
-            if (!string.IsNullOrEmpty(defaultValue))
+            if(!string.IsNullOrEmpty(defaultValue))
             {
                 sql.AppendFormat(DefaultValueFormat, defaultValue);
             }
@@ -415,14 +415,14 @@ namespace ServiceStack.OrmLite
                 !string.IsNullOrEmpty(sqlFilter)
                 && sqlFilter.TrimStart().StartsWith(SelectStatement, StringComparison.OrdinalIgnoreCase);
 
-            if (isFullSelectStatement) return sqlFilter.SqlFormat(filterParams);
+            if(isFullSelectStatement) return sqlFilter.SqlFormat(filterParams);
 
             sql.AppendFormat("SELECT {0} FROM {1}", tableType.GetColumnNames(),
                              GetQuotedTableName(modelDef));
-            if (!string.IsNullOrEmpty(sqlFilter))
+            if(!string.IsNullOrEmpty(sqlFilter))
             {
                 sqlFilter = sqlFilter.SqlFormat(filterParams);
-                if (!sqlFilter.StartsWith("ORDER ", StringComparison.InvariantCultureIgnoreCase)
+                if(!sqlFilter.StartsWith("ORDER ", StringComparison.InvariantCultureIgnoreCase)
                     && !sqlFilter.StartsWith("LIMIT ", StringComparison.InvariantCultureIgnoreCase))
                 {
                     sql.Append(" WHERE ");
@@ -442,26 +442,31 @@ namespace ServiceStack.OrmLite
         public virtual string ToInsertRowStatement(object objWithProperties, IList<string> insertFields, IDbCommand command)
         {
 
-            if (insertFields == null) insertFields = new List<string>();
+            if(insertFields == null) insertFields = new List<string>();
             var sbColumnNames = new StringBuilder();
             var sbColumnValues = new StringBuilder();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            if(modelDef.FieldDefinitions.Count == 1 && modelDef.FieldDefinitions[0].AutoIncrement)
             {
-                if (fieldDef.AutoIncrement) continue;
-                //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
-                if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
+                return string.Format("INSERT INTO {0} DEFAULT VALUES", GetQuotedTableName(modelDef));
+            }
 
-                if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
-                if (sbColumnValues.Length > 0) sbColumnValues.Append(",");
+            foreach(var fieldDef in modelDef.FieldDefinitions)
+            {
+                if(fieldDef.AutoIncrement) continue;
+                //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
+                if(insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
+
+                if(sbColumnNames.Length > 0) sbColumnNames.Append(",");
+                if(sbColumnValues.Length > 0) sbColumnValues.Append(",");
 
                 try
                 {
                     sbColumnNames.Append(GetQuotedColumnName(fieldDef.FieldName));
                     sbColumnValues.Append(fieldDef.GetQuotedValue(objWithProperties));
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in ToInsertRowStatement(): " + ex.Message, ex);
                     throw;
@@ -481,21 +486,21 @@ namespace ServiceStack.OrmLite
 
         public virtual IDbCommand CreateParameterizedInsertStatement(object objWithProperties, IList<string> insertFields, IDbConnection connection)
         {
-            if (insertFields == null) insertFields = new List<string>();
+            if(insertFields == null) insertFields = new List<string>();
             var sbColumnNames = new StringBuilder();
             var sbColumnValues = new StringBuilder();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
             var command = connection.CreateCommand();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
-                if (fieldDef.AutoIncrement) continue;
+                if(fieldDef.AutoIncrement) continue;
                 //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
-                if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
+                if(insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
 
-                if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
-                if (sbColumnValues.Length > 0) sbColumnValues.Append(",");
+                if(sbColumnNames.Length > 0) sbColumnNames.Append(",");
+                if(sbColumnValues.Length > 0) sbColumnValues.Append(",");
 
                 try
                 {
@@ -505,7 +510,7 @@ namespace ServiceStack.OrmLite
 
                     AddParameterForFieldToCommand(command, fieldDef, objWithProperties);
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in CreateParameterizedInsertStatement(): " + ex.Message, ex);
                     throw;
@@ -524,22 +529,22 @@ namespace ServiceStack.OrmLite
 
         public void ReParameterizeInsertStatement(object objWithProperties, IList<string> insertFields, IDbCommand command)
         {
-            if (insertFields == null) insertFields = new List<string>();
+            if(insertFields == null) insertFields = new List<string>();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
             command.Parameters.Clear();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
-                if (fieldDef.AutoIncrement) continue;
+                if(fieldDef.AutoIncrement) continue;
                 //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
-                if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
+                if(insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
 
                 try
                 {
                     AddParameterForFieldToCommand(command, fieldDef, objWithProperties);
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in ReParameterizeInsertStatement(): " + ex.Message, ex);
                     throw;
@@ -552,7 +557,7 @@ namespace ServiceStack.OrmLite
             var p = command.CreateParameter();
             p.ParameterName = string.Format("{0}{1}", ParamString, fieldDef.FieldName);
 
-            if (DbTypeMap.ColumnDbTypeMap.ContainsKey(fieldDef.FieldType))
+            if(DbTypeMap.ColumnDbTypeMap.ContainsKey(fieldDef.FieldType))
             {
                 p.DbType = DbTypeMap.ColumnDbTypeMap[fieldDef.FieldType];
                 p.Value = GetValueOrDbNull(fieldDef, objWithProperties);
@@ -574,7 +579,7 @@ namespace ServiceStack.OrmLite
 
         private object GetValueOrDbNull(String value)
         {
-            if (String.IsNullOrEmpty(value))
+            if(String.IsNullOrEmpty(value))
                 return DBNull.Value;
 
             return value;
@@ -587,29 +592,29 @@ namespace ServiceStack.OrmLite
 
         public virtual string ToUpdateRowStatement(object objWithProperties, IList<string> updateFields)
         {
-            if (updateFields == null) updateFields = new List<string>();
+            if(updateFields == null) updateFields = new List<string>();
             var sqlFilter = new StringBuilder();
             var sql = new StringBuilder();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
                 try
                 {
-                    if (fieldDef.IsPrimaryKey && updateFields.Count == 0)
+                    if(fieldDef.IsPrimaryKey && updateFields.Count == 0)
                     {
-                        if (sqlFilter.Length > 0) sqlFilter.Append(" AND ");
+                        if(sqlFilter.Length > 0) sqlFilter.Append(" AND ");
 
                         sqlFilter.AppendFormat("{0} = {1}", GetQuotedColumnName(fieldDef.FieldName), fieldDef.GetQuotedValue(objWithProperties));
 
                         continue;
                     }
 
-                    if (updateFields.Count > 0 && !updateFields.Contains(fieldDef.Name) || fieldDef.AutoIncrement) continue;
-                    if (sql.Length > 0) sql.Append(",");
+                    if(updateFields.Count > 0 && !updateFields.Contains(fieldDef.Name) || fieldDef.AutoIncrement) continue;
+                    if(sql.Length > 0) sql.Append(",");
                     sql.AppendFormat("{0} = {1}", GetQuotedColumnName(fieldDef.FieldName), fieldDef.GetQuotedValue(objWithProperties));
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in ToUpdateRowStatement(): " + ex.Message, ex);
                 }
@@ -618,9 +623,9 @@ namespace ServiceStack.OrmLite
             var updateSql = string.Format("UPDATE {0} SET {1}{2}",
                 GetQuotedTableName(modelDef), sql, (sqlFilter.Length > 0 ? " WHERE " + sqlFilter : ""));
 
-            if (sql.Length == 0)
+            if(sql.Length == 0)
                 throw new Exception("No valid update properties provided (e.g. p => p.FirstName): " + updateSql);
-            
+
             return updateSql;
         }
 
@@ -631,20 +636,20 @@ namespace ServiceStack.OrmLite
 
         public virtual IDbCommand CreateParameterizedUpdateStatement(object objWithProperties, IList<string> updateFields, IDbConnection connection)
         {
-            if (updateFields == null) updateFields = new List<string>();
+            if(updateFields == null) updateFields = new List<string>();
             var sqlFilter = new StringBuilder();
             var sql = new StringBuilder();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
             var command = connection.CreateCommand();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
                 try
                 {
-                    if (fieldDef.IsPrimaryKey && updateFields.Count == 0)
+                    if(fieldDef.IsPrimaryKey && updateFields.Count == 0)
                     {
-                        if (sqlFilter.Length > 0) sqlFilter.Append(" AND ");
+                        if(sqlFilter.Length > 0) sqlFilter.Append(" AND ");
 
                         sqlFilter.AppendFormat("{0} = {1}", GetQuotedColumnName(fieldDef.FieldName), String.Concat(ParamString, fieldDef.Name));
                         AddParameterForFieldToCommand(command, fieldDef, objWithProperties);
@@ -652,13 +657,13 @@ namespace ServiceStack.OrmLite
                         continue;
                     }
 
-                    if (updateFields.Count > 0 && !updateFields.Contains(fieldDef.Name)) continue;
-                    if (sql.Length > 0) sql.Append(",");
+                    if(updateFields.Count > 0 && !updateFields.Contains(fieldDef.Name)) continue;
+                    if(sql.Length > 0) sql.Append(",");
                     sql.AppendFormat("{0} = {1}", GetQuotedColumnName(fieldDef.FieldName), String.Concat(ParamString, fieldDef.Name));
 
                     AddParameterForFieldToCommand(command, fieldDef, objWithProperties);
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in CreateParameterizedUpdateStatement(): " + ex.Message, ex);
                 }
@@ -673,18 +678,18 @@ namespace ServiceStack.OrmLite
             var sqlFilter = new StringBuilder();
             var modelDef = objWithProperties.GetType().GetModelDefinition();
 
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
                 try
                 {
-                    if (fieldDef.IsPrimaryKey)
+                    if(fieldDef.IsPrimaryKey)
                     {
-                        if (sqlFilter.Length > 0) sqlFilter.Append(" AND ");
+                        if(sqlFilter.Length > 0) sqlFilter.Append(" AND ");
 
                         sqlFilter.AppendFormat("{0} = {1}", GetQuotedColumnName(fieldDef.FieldName), fieldDef.GetQuotedValue(objWithProperties));
                     }
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Log.Error("ERROR in ToDeleteRowStatement(): " + ex.Message, ex);
                 }
@@ -706,11 +711,11 @@ namespace ServiceStack.OrmLite
                 && sqlFilter.Length > deleteStatement.Length
                 && sqlFilter.Substring(0, deleteStatement.Length).ToUpper().Equals(deleteStatement);
 
-            if (isFullDeleteStatement) return sqlFilter.SqlFormat(filterParams);
+            if(isFullDeleteStatement) return sqlFilter.SqlFormat(filterParams);
 
             var modelDef = tableType.GetModelDefinition();
             sql.AppendFormat("DELETE FROM {0}", GetQuotedTableName(modelDef));
-            if (!string.IsNullOrEmpty(sqlFilter))
+            if(!string.IsNullOrEmpty(sqlFilter))
             {
                 sqlFilter = sqlFilter.SqlFormat(filterParams);
                 sql.Append(" WHERE ");
@@ -726,9 +731,9 @@ namespace ServiceStack.OrmLite
             var sbConstraints = new StringBuilder();
 
             var modelDef = tableType.GetModelDefinition();
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
-                if (sbColumns.Length != 0) sbColumns.Append(", \n  ");
+                if(sbColumns.Length != 0) sbColumns.Append(", \n  ");
 
                 var columnDefinition = GetColumnDefinition(
                     fieldDef.FieldName,
@@ -742,7 +747,7 @@ namespace ServiceStack.OrmLite
 
                 sbColumns.Append(columnDefinition);
 
-                if (fieldDef.ForeignKey == null) continue;
+                if(fieldDef.ForeignKey == null) continue;
 
                 var refModelDef = fieldDef.ForeignKey.ReferenceType.GetModelDefinition();
                 sbConstraints.AppendFormat(
@@ -753,10 +758,10 @@ namespace ServiceStack.OrmLite
                     GetQuotedTableName(refModelDef),
                     GetQuotedColumnName(refModelDef.PrimaryKey.FieldName));
 
-                if (!string.IsNullOrEmpty(fieldDef.ForeignKey.OnDelete))
+                if(!string.IsNullOrEmpty(fieldDef.ForeignKey.OnDelete))
                     sbConstraints.AppendFormat(" ON DELETE {0}", fieldDef.ForeignKey.OnDelete);
 
-                if (!string.IsNullOrEmpty(fieldDef.ForeignKey.OnUpdate))
+                if(!string.IsNullOrEmpty(fieldDef.ForeignKey.OnUpdate))
                     sbConstraints.AppendFormat(" ON UPDATE {0}", fieldDef.ForeignKey.OnUpdate);
             }
             var sql = new StringBuilder(string.Format(
@@ -770,9 +775,9 @@ namespace ServiceStack.OrmLite
             var sqlIndexes = new List<string>();
 
             var modelDef = tableType.GetModelDefinition();
-            foreach (var fieldDef in modelDef.FieldDefinitions)
+            foreach(var fieldDef in modelDef.FieldDefinitions)
             {
-                if (!fieldDef.IsIndexed) continue;
+                if(!fieldDef.IsIndexed) continue;
 
                 var indexName = GetIndexName(fieldDef.IsUnique, modelDef.ModelName.SafeVarName(), fieldDef.FieldName);
 
@@ -780,7 +785,7 @@ namespace ServiceStack.OrmLite
                     ToCreateIndexStatement(fieldDef.IsUnique, indexName, modelDef, fieldDef.FieldName));
             }
 
-            foreach (var compositeIndex in modelDef.CompositeIndexes)
+            foreach(var compositeIndex in modelDef.CompositeIndexes)
             {
                 var indexName = GetIndexName(compositeIndex.Unique, modelDef.ModelName.SafeVarName(),
                     string.Join("_", compositeIndex.FieldNames.ToArray()));
@@ -798,7 +803,7 @@ namespace ServiceStack.OrmLite
 
         public virtual DbType GetColumnDbType(Type valueType)
         {
-            if (valueType.IsEnum)
+            if(valueType.IsEnum)
                 return DbTypeMap.ColumnDbTypeMap[typeof(string)];
 
             return DbTypeMap.ColumnDbTypeMap[valueType];
@@ -852,7 +857,7 @@ namespace ServiceStack.OrmLite
         public virtual string ToCreateSequenceStatement(Type tableType, string sequenceName)
         {
             return "";
-        }        
+        }
 
         public virtual List<string> SequenceList(Type tableType)
         {
